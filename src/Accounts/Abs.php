@@ -1,8 +1,6 @@
 <?php
 
-declare(strict_types = 1);
-
-namespace Nylas\Outbox;
+namespace Nylas\Accounts;
 
 use Nylas\Utilities\Abs as AbsTrait;
 
@@ -11,10 +9,11 @@ use Nylas\Utilities\Abs as AbsTrait;
  * Nylas Abs
  * ----------------------------------------------------------------------------------
  *
- * @property Message Message
+ * @method Account Account()
+ * @method Manage  Manage()
  *
  * @author lanlin
- * @change 2023/07/21
+ * @change 2020/04/26
  */
 class Abs
 {

@@ -1,11 +1,6 @@
 <?php
 
-declare(strict_types = 1);
-
 namespace Nylas;
-
-use function ucfirst;
-use function class_exists;
 
 use Nylas\Utilities\Options;
 use Nylas\Exceptions\NylasException;
@@ -15,37 +10,25 @@ use Nylas\Exceptions\NylasException;
  * Nylas Client
  * ----------------------------------------------------------------------------------
  *
- * @property Utilities\Options  Options
- * @property Authentication\Abs Authentication
- * @property Calendars\Abs      Calendars
- * @property Contacts\Abs       Contacts
- * @property Deltas\Abs         Deltas
- * @property Drafts\Abs         Drafts
- * @property Events\Abs         Events
- * @property Files\Abs          Files
- * @property Folders\Abs        Folders
- * @property JobStatuses\Abs    JobStatuses
- * @property Labels\Abs         Labels
- * @property Management\Abs     Management
- * @property Messages\Abs       Messages
- * @property Neural\Abs         Neural
- * @property Outbox\Abs         Outbox
- * @property Rooms\Abs          Rooms
- * @property Schedulers\Abs     Schedulers
- * @property Threads\Abs        Threads
- * @property Webhooks\Abs       Webhooks
+ * @method Accounts\Abs       Accounts()
+ * @method Authentication\Abs Authentication()
+ * @method Calendars\Abs      Calendars()
+ * @method Deltas\Abs         Deltas()
+ * @method Events\Abs         Events()
+ * @method Threads\Abs        Threads()
+ * @method JobStatuses\Abs    JobStatuses()
  *
  * @author lanlin
- * @change 2023/07/21
+ * @change 2021/03/18
  */
 class Client
 {
     // ------------------------------------------------------------------------------
 
     /**
-     * @var array
+     * @var Options
      */
-    private array $objects = [];
+    private $options;
 
     // ------------------------------------------------------------------------------
 
@@ -55,59 +38,52 @@ class Client
      * @param array $options
      *                       [
      *                       'debug'            => bool,
-     *                       'region'           => 'us',
+     *                       'region'           => 'oregon',
      *                       'log_file'         => 'log file path',
+     *                       'account_id'       => '',
+     *                       'access_token'     => '',
      *                       'client_id'        => 'required',
      *                       'client_secret'    => 'required',
-     *                       'access_token'     => '',
      *                       ]
      */
     public function __construct(array $options)
     {
-        $this->objects['Options'] = new Options($options);
+        $this->options = new Options($options);
     }
 
     // ------------------------------------------------------------------------------
 
     /**
-     * call nylas apis with __get
+     * call nylas apis
      *
      * @param string $name
+     * @param array  $arguments
      *
      * @return object
      */
-    public function __get(string $name): object
+    public function __call(string $name, array $arguments): object
     {
-        return $this->callSubClass($name);
-    }
-
-    // ------------------------------------------------------------------------------
-
-    /**
-     * call sub class
-     *
-     * @param string $name
-     *
-     * @return object
-     */
-    private function callSubClass(string $name): object
-    {
-        $name = ucfirst($name);
-
-        if (!empty($this->objects[$name]))
-        {
-            return $this->objects[$name];
-        }
-
-        $apiClass = __NAMESPACE__.'\\'.$name.'\\Abs';
+        $apiClass = __NAMESPACE__.'\\'.\ucfirst($name).'\\Abs';
 
         // check class exists
-        if (!class_exists($apiClass))
+        if (!\class_exists($apiClass))
         {
             throw new NylasException(null, "class {$apiClass} not found!");
         }
 
-        return $this->objects[$name] = new $apiClass($this->objects['Options']);
+        return new $apiClass($this->options);
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * get options instance for setting options
+     *
+     * @return \Nylas\Utilities\Options
+     */
+    public function Options(): Options
+    {
+        return $this->options;
     }
 
     // ------------------------------------------------------------------------------

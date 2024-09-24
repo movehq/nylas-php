@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types = 1);
-
 namespace Nylas\Utilities;
 
 use function fopen;
@@ -11,7 +9,6 @@ use function is_resource;
 use Nylas\Request\Sync;
 use Nylas\Request\Async;
 use Nylas\Utilities\Validator as V;
-use Nylas\Exceptions\UnauthorizedException;
 
 /**
  * ----------------------------------------------------------------------------------
@@ -19,7 +16,7 @@ use Nylas\Exceptions\UnauthorizedException;
  * ----------------------------------------------------------------------------------
  *
  * @author lanlin
- * @change 2023/07/21
+ * @change 2021/03/18
  */
 class Options
 {
@@ -28,42 +25,47 @@ class Options
     /**
      * @var mixed
      */
-    private mixed $logFile;
-
-    /**
-     * @var null|callable
-     */
-    private mixed $handler;
+    private $logFile;
 
     /**
      * @var bool
      */
-    private bool $debug = false;
+    private $debug = false;
 
     /**
      * @var string
      */
-    private string $server;
+    private $server;
 
     /**
      * @var string
      */
-    private string $region;
+    private $apiKey;
 
     /**
      * @var string
      */
-    private string $clientId;
+    private $clientId;
 
     /**
      * @var string
      */
-    private string $clientSecret;
+    private $grantId;
 
     /**
      * @var string
      */
-    private string $accessToken;
+    private $accessToken;
+
+    /**
+     * @var string
+     */
+    private $accountId;
+
+    /**
+     * @var array
+     */
+    private $accountInfo;
 
     // ------------------------------------------------------------------------------
 
@@ -74,38 +76,67 @@ class Options
      */
     public function __construct(array $options)
     {
-        V::doValidate(V::keySet(
-            V::key('client_id', V::stringType()::notEmpty()),
-            V::key('client_secret', V::stringType()::notEmpty()),
-            V::keyOptional('debug', V::boolType()),
-            V::keyOptional('region', V::in(['oregon', 'ireland'])),
-            V::keyOptional('handler', V::callableType()),
-            V::keyOptional('log_file', $this->getLogFileRule()),
-            V::keyOptional('access_token', V::stringType()::notEmpty()),
-        ), $options);
+        $rules = V::keySet(
+            V::key('debug', V::boolType(), false),
+            V::key('region', V::in(['oregon', 'canada', 'ireland']), false),
+            V::key('log_file', $this->getLogFileRule(), false),
+            V::key('account_id', V::stringType()->notEmpty(), false),
+            V::key('access_token', V::stringType()->notEmpty(), false),
+            V::key('client_id', V::stringType()->notEmpty()),
+            V::key('api_key', V::stringType()->notEmpty())
+        );
 
+        V::doValidate($rules, $options);
+
+        // required
         $this->region = $options['region'] ?? 'oregon';
-
+        $this->setClientApps($options['api_key']);
         $this->setClientId($options['client_id']);
-        $this->setClientSecret($options['client_secret']);
-
+        // optional
         $this->setDebug($options['debug'] ?? false);
-        $this->setServer($this->region);
-        $this->setHandler($options['handler'] ?? null);
+        $this->setServer($options['region'] ?? 'oregon');
         $this->setLogFile($options['log_file'] ?? null);
+        $this->setAccountId($options['account_id'] ?? '');
+        $this->setGrantId($options['grant_id'] ?? '');
         $this->setAccessToken($options['access_token'] ?? '');
     }
 
     // ------------------------------------------------------------------------------
 
     /**
-     * set guzzle client handler
+     * set access token
      *
-     * @param null|callable $handler
+     * @param string $token
      */
-    public function setHandler(?callable $handler): void
+    public function setGrantId(string $grantId): void
     {
-        $this->handler = $handler;
+        $this->grantId = $grantId;
+    }
+
+    /**
+     * get grantId
+     *
+     */
+    public function getGrantId(): string
+    {
+        return $this->grantId;
+    }
+
+    /**
+     * set access token
+     *
+     * @param string $token
+     */
+    public function setAccessToken(string $token): void
+    {
+        $this->accessToken = $token;
+
+        if (!$token)
+        {
+            return;
+        }
+
+        $this->accountInfo = [];
     }
 
     // ------------------------------------------------------------------------------
@@ -113,11 +144,35 @@ class Options
     /**
      * get access token
      *
-     * @return null|callable
+     * @return string
      */
-    public function getHandler(): ?callable
+    public function getAccessToken(): ?string
     {
-        return $this->handler ?? null;
+        return $this->accessToken ?? null;
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * set account id
+     *
+     * @param string $id
+     */
+    public function setAccountId(string $id): void
+    {
+        $this->accountId = $id;
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * get account id
+     *
+     * @return string
+     */
+    public function getAccountId(): ?string
+    {
+        return $this->accountId ?? null;
     }
 
     // ------------------------------------------------------------------------------
@@ -125,23 +180,11 @@ class Options
     /**
      * @param null|string $region
      */
-    public function setServer(?string $region = null): void
+    public function setServer(string $region = null): void
     {
         $region = $region ?? 'oregon';
 
         $this->server = API::SERVER[$region] ?? API::SERVER['oregon'];
-    }
-
-    // ------------------------------------------------------------------------------
-
-    /**
-     * @param null|string $region
-     */
-    public function setSchedulerServer(?string $region = null): void
-    {
-        $region = $region ?? 'oregon';
-
-        $this->server = API::SERVER_SCHEDULER[$region] ?? API::SERVER_SCHEDULER['oregon'];
     }
 
     // ------------------------------------------------------------------------------
@@ -175,9 +218,9 @@ class Options
      *
      * @param mixed $logFile
      */
-    public function setLogFile(mixed $logFile): void
+    public function setLogFile($logFile): void
     {
-        if ($logFile !== null)
+        if (null !== $logFile)
         {
             V::doValidate($this->getLogFileRule(), $logFile);
         }
@@ -188,19 +231,9 @@ class Options
     // ------------------------------------------------------------------------------
 
     /**
-     * @return string
-     */
-    public function getRegion(): string
-    {
-        return $this->region;
-    }
-
-    // ------------------------------------------------------------------------------
-
-    /**
-     * set client id
+     * set clientId
      *
-     * @param string $clientId
+     * @param mixed $clientId
      */
     public function setClientId(string $clientId): void
     {
@@ -210,82 +243,31 @@ class Options
     // ------------------------------------------------------------------------------
 
     /**
-     * set client secret
+     * set client id & secret
      *
+     * @param string $clientId
      * @param string $clientSecret
      */
-    public function setClientSecret(string $clientSecret): void
+    public function setClientApps(string $clientId,  string $apiKey): void
     {
-        $this->clientSecret = $clientSecret;
+        $this->clientId   = $clientId;
+        $this->apiKey     = $apiKey;
     }
 
     // ------------------------------------------------------------------------------
 
     /**
-     * get client id
-     *
-     * @return string
-     */
-    public function getClientId(): string
-    {
-        return $this->clientId;
-    }
-
-    // ------------------------------------------------------------------------------
-
-    /**
-     * get client secret
-     *
-     * @return string
-     */
-    public function getClientSecret(): string
-    {
-        return $this->clientSecret;
-    }
-
-    // ------------------------------------------------------------------------------
-
-    /**
-     * set access token
-     *
-     * @param string $token
-     */
-    public function setAccessToken(string $token): void
-    {
-        $this->accessToken = $token;
-    }
-
-    // ------------------------------------------------------------------------------
-
-    /**
-     * get access token
-     *
-     * @return string
-     */
-    public function getAccessToken(): string
-    {
-        if (!$this->accessToken)
-        {
-            throw new UnauthorizedException();
-        }
-
-        return $this->accessToken;
-    }
-
-    // ------------------------------------------------------------------------------
-
-    /**
-     * get authorization header
-     *
-     * @param bool $isAccessToken
+     * get client id & secret
      *
      * @return array
      */
-    public function getAuthorizationHeader(bool $isAccessToken = true): array
+    public function getClientApps(): array
     {
-        $authorization = $isAccessToken ? $this->getAccessToken() : $this->clientSecret;
-
-        return ['Authorization' => $authorization];
+        return
+        [
+            'client_id'   => $this->clientId,
+            'api_key'     => $this->apiKey
+        ];
     }
 
     // ------------------------------------------------------------------------------
@@ -299,13 +281,14 @@ class Options
     {
         return
         [
-            'debug'         => $this->debug,
-            'log_file'      => $this->logFile,
-            'server'        => $this->server,
-            'handler'       => $this->handler,
-            'client_id'     => $this->clientId,
-            'client_secret' => $this->clientSecret,
-            'access_token'  => $this->accessToken,
+            'debug'            => $this->debug,
+            'log_file'         => $this->logFile,
+            'server'           => $this->server,
+            'api_key'          => $this->apiKey,
+            'client_id'        => $this->clientId,
+            'account_id'       => $this->accountId,
+            'grant_id'         => $this->grantId,
+            'access_token'     => $this->accessToken,
         ];
     }
 
@@ -314,12 +297,12 @@ class Options
     /**
      * get sync request instance
      *
-     * @return Sync
+     * @return \Nylas\Request\Sync
      */
     public function getSync(): Sync
     {
-        $debug   = $this->getLoggerHandler();
-        $server  = $this->getServer();
+        $debug = $this->getLoggerHandler();
+        $server = $this->getServer();
         $handler = $this->getHandler();
 
         return new Sync($server, $handler, $debug);
@@ -330,15 +313,45 @@ class Options
     /**
      * get async request instance
      *
-     * @return Async
+     * @return \Nylas\Request\Async
      */
     public function getAsync(): Async
     {
-        $debug   = $this->getLoggerHandler();
-        $server  = $this->getServer();
+        $debug = $this->getLoggerHandler();
+        $server = $this->getServer();
         $handler = $this->getHandler();
 
         return new Async($server, $handler, $debug);
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * get account infos
+     *
+     * @return array
+     */
+    public function getAccount(): array
+    {
+        $temp =
+        [
+            'id'                => '',
+            'account_id'        => '',
+            'email_address'     => '',
+            'name'              => '',
+            'object'            => '',
+            'provider'          => '',
+            'linked_at'         => null,
+            'sync_state'        => '',
+            'organization_unit' => '',
+        ];
+
+        if (empty($this->accountInfo) && !empty($this->accessToken))
+        {
+            $this->accountInfo = (new Account($this))->getAccount();
+        }
+
+        return \array_merge($temp, $this->accountInfo);
     }
 
     // ------------------------------------------------------------------------------

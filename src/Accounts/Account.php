@@ -1,36 +1,34 @@
 <?php
 
-declare(strict_types = 1);
-
-namespace Nylas\Rooms;
+namespace Nylas\Accounts;
 
 use Nylas\Utilities\API;
 use Nylas\Utilities\Options;
-use GuzzleHttp\Exception\GuzzleException;
+use Nylas\Authentication\Hosted;
 
 /**
  * ----------------------------------------------------------------------------------
- * Nylas Room
+ * Nylas Account
  * ----------------------------------------------------------------------------------
  *
  * @author lanlin
- * @change 2023/07/21
+ * @change 2020/04/26
  */
-class Resource
+class Account
 {
     // ------------------------------------------------------------------------------
 
     /**
-     * @var Options
+     * @var \Nylas\Utilities\Options
      */
-    private Options $options;
+    private $options;
 
     // ------------------------------------------------------------------------------
 
     /**
-     * Message constructor.
+     * Account constructor.
      *
-     * @param Options $options
+     * @param \Nylas\Utilities\Options $options
      */
     public function __construct(Options $options)
     {
@@ -40,22 +38,32 @@ class Resource
     // ------------------------------------------------------------------------------
 
     /**
-     * Which rooms a user can book within their GSuite or Office365 organization
-     *
-     * @see https://developer.nylas.com/docs/api/v2/#get-/resources
-     *
-     * @param int $limit
+     * cancel account
      *
      * @return array
-     * @throws GuzzleException
      */
-    public function returnRoomResourceInformation(int $limit = 100): array
+    public function cancelAccount(): array
     {
+        return (new Hosted($this->options))->postOAuthRevoke();
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * get account info
+     *
+     * @return array
+     */
+    public function getAccount(): array
+    {
+        $accessToken = $this->options->getAccessToken();
+
+        $header = ['Authorization' => $accessToken];
+
         return $this->options
             ->getSync()
-            ->setQuery(['limit' => $limit])
-            ->setHeaderParams($this->options->getAuthorizationHeader())
-            ->get(API::LIST['resource']);
+            ->setHeaderParams($header)
+            ->get(API::LIST['account']);
     }
 
     // ------------------------------------------------------------------------------

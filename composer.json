@@ -1,11 +1,11 @@
 {
-    "name": "lanlin/nylas-php",
-    "description": "Nylas PHP SDK (api version 2.7)",
+    "name": "movehq/nylas-php",
+    "description": "Nylas PHP SDK (api version 3.0)",
     "license": "MIT",
     "authors" : [
         {
-          "name": "lanlin",
-          "email": "lanlin1987@gmail.com"
+          "name": "movehq",
+          "email": "support@updater.com"
         }
     ],
     "require": {
