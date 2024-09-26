@@ -110,7 +110,6 @@ class Native
 
         $params = [
             'client_id'     => $this->options->getClientId(),
-            'client_secret' => $this->options->getClientSecret(),
             'email_address' => $email,
         ];
 

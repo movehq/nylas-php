@@ -1,14 +1,11 @@
 <?php
 
-declare(strict_types = 1);
-
 namespace Nylas\Events;
 
 use Nylas\Utilities\API;
 use Nylas\Utilities\Helper;
 use Nylas\Utilities\Options;
 use Nylas\Utilities\Validator as V;
-use GuzzleHttp\Exception\GuzzleException;
 
 /**
  * ----------------------------------------------------------------------------------

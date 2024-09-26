@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types = 1);
-
 namespace Nylas\Utilities;
 
 /**
@@ -9,39 +7,28 @@ namespace Nylas\Utilities;
  * Nylas RESTFul API List
  * ----------------------------------------------------------------------------------
  *
- * @see https://developer.nylas.com/docs/new/#product-releases
- * @see https://developer.nylas.com/docs/new/release-notes/all/
+ * @see https://changelog.nylas.com/
+ * @see https://docs.nylas.com/reference#api-changelog
  *
- * @version 2.7 (2023/07/21)
+ * @version 2.1 (2020/09/30)
  *
  * @author lanlin
- * @change 2023/07/24
  */
 class API
 {
     // ------------------------------------------------------------------------------
 
     /**
-     * nylas common server list array
-     *
-     * @see https://developer.nylas.com/docs/the-basics/platform/data-residency/
+     * nylas server list array
      */
     public const SERVER = [
-        'oregon'  => 'https://api.nylas.com',
-        'ireland' => 'https://ireland.api.nylas.com',
+        'oregon'  => 'https://api.us.nylas.com',
+        'canada'  => 'https://api.us.nylas.com',
+        'ireland' => 'https://api.eu.nylas.com',
     ];
 
     // ------------------------------------------------------------------------------
 
-    /**
-     * nylas scheduler server list array
-     *
-     * @see https://developer.nylas.com/docs/the-basics/platform/data-residency/
-     */
-    public const SERVER_SCHEDULER = [
-        'oregon'  => 'https://api.schedule.nylas.com',
-        'ireland' => 'https://ireland.api.schedule.nylas.com',
-    ];
 
     // ------------------------------------------------------------------------------
 
@@ -93,169 +80,46 @@ class API
      * @see https://developer.nylas.com/docs/the-basics/authentication/authentication-scopes/#nylas-scopes
      */
     public const SCOPES = [
-        'email',                    // Send and modify all messages, threads, file attachments, and read email metadata like headers
-        'email.send',               // Send messages only. No read or modify privileges on users' emails. Using email.send as the only scope with Gmail accounts may lead to unexpected threading behavior. Accounts using this as the only scope will also always be in an initializing state.
-        'email.modify',             // Read and modify all messages, threads, file attachments, and read email metadata like headers. Does not include send.
-        'email.drafts',             // Read and modify drafts. Does not include send.
-        'email.metadata',           // Read email metadata including headers and labels/folders, but not the message body or file attachments.
-        'email.read_only',          // Read all messages, threads, file attachments, drafts, and email metadata like headers. No write operations.
-        'email.folders_and_labels', // Read and modify folders or labels, depending on the account type.
-        'contacts',                 // Read and modify contacts.
-        'contacts.read_only',       // Read contacts.
         'calendar',                 // Read and modify calendars and events.
         'calendar.free_busy',       // Exchange WebSync (EWS) accounts should add this scope to access the /free-busy endpoint.
         'calendar.read_only',       // Read calendars and events.
-        'room_resources.read_only', // Read available room resources for an account. Room resources for Office 365 is an admin consent required permission.
     ];
 
     // ------------------------------------------------------------------------------
 
-    /**
-     * nylas webhook triggers
-     *
-     * @see https://developer.nylas.com/docs/developer-guide/webhooks/set-up-webhooks/#notification-triggers
-     */
-    public const TRIGGERS = [
-        'account.connected',    // An account has been connected to your app.
-        'account.invalid',      // An account has invalid credentials and must re-authenticate.
-        'account.running',      // An account is syncing and running properly even if the account is in a partial state.
-        'account.stopped',      // An account was stopped or cancelled.
-        'account.sync_error',   // An account has a sync error and is no longer syncing.
-        'message.created',      // A new message was sent or received.
-        'message.link_clicked', // A link in a tracked message has been clicked by a message participant. Enable using Message Tracking.
-        'message.opened',       // A tracked message has been opened by a message participant. Enable using Message Tracking.
-        'message.updated',      // An update to a message occurred.
-        'thread.replied',       // A participant replied to a tracked thread.
-        'contact.created',      // A contact has been added to an account.
-        'contact.updated',      // A contact has been updated on an account.
-        'contact.deleted',      // A contact has been deleted from an account.
-        'calendar.created',     // A calendar has been added to an account.
-        'calendar.updated',     // A calendar has been updated on an account.
-        'calendar.deleted',     // A calendar has been deleted from an account.
-        'event.created',        // An event has been added to an account.
-        'event.updated',        // An event has been updated on an account. This can include event changes and event deletions.
-        'event.deleted',        // An event has been deleted from an account.
-        'job.successful',       // Job was successfully synced back to the provider for a given job_status_id.
-        'job.failed',           // The job has permanently failed after retrying 20 times. The changes have not synced with the provider.
-    ];
-
-    // ------------------------------------------------------------------------------
 
     /**
      * nylas api list array
-     *
-     * @see https://developer.nylas.com/docs/api/#overview
      */
-    public const LIST = [
+    public const LIST =
+    [
         // Authentication
-        'oAuthToken'       => '/oauth/token',
-        'oAuthRevoke'      => '/oauth/revoke',
-        'oAuthAuthorize'   => '/oauth/authorize',
-        'connectToken'     => '/connect/token',
-        'connectProvider'  => '/connect/detect-provider',
-        'connectAuthorize' => '/connect/authorize',
+        'oAuthToken'        => '/v3/connect/token',
+        'oAuthRevoke'       => '/v3/connect/revoke',
+        'oAuthAuthorize'    => '/v3/connect/auth',
+        'connectToken'      => '/v3/connect/token',
+        'connectAuthorize'  => '/v3/connect/auth',
 
-        // management
-        'account'           => '/account',
-        'manageApp'         => '/a/%s',
-        'ipAddresses'       => '/a/%s/ip_addresses',
-        'listAllAccounts'   => '/a/%s/accounts',
-        'listAnAccount'     => '/a/%s/accounts/%s',
-        'cancelAnAccount'   => '/a/%s/accounts/%s/downgrade',
-        'revokeAllTokens'   => '/a/%s/accounts/%s/revoke-all',
-        'tokenInfo'         => '/a/%s/accounts/%s/token-info',
-        'reactiveAnAccount' => '/a/%s/accounts/%s/upgrade',
-
-        // Threads
-        'threads'   => '/threads',
-        'oneThread' => '/threads/%s',
-
-        // Messages
-        'messages'   => '/messages',
-        'oneMessage' => '/messages/%s',
-
-        // Folders (new PUT folder)
-        'folders'   => '/folders',
-        'oneFolder' => '/folders/%s',
-
-        // Labels
-        'labels'   => '/labels',
-        'oneLabel' => '/labels/%s',
-
-        // Drafts
-        'drafts'   => '/drafts',
-        'oneDraft' => '/drafts/%s',
-
-        // Outbox
-        'outbox'    => '/outbox',
-        'oneOutbox' => '/outbox/%s',
-
-        // Sending
-        'sending' => '/send',
-
-        // Files
-        'files'        => '/files',
-        'oneFile'      => '/files/%s',
-        'downloadFile' => '/files/%s/download',
+        // Accounts
+        'account'            => '/account',
+        'manageApp'          => '/a/%s',
+        'tokenInfo'          => '/a/%s/accounts/%s/token-info',
+        'ipAddresses'        => '/a/%s/accounts/%s/ip_addresses',
+        'listAnAccount'      => '/a/%s/accounts/%s',
+        'listAllAccounts'    => '/a/%s/accounts',
+        'cancelAnAccount'    => '/a/%s/accounts/%s/downgrade',
+        'revokeAllTokens'    => '/a/%s/accounts/%s/revoke-all',
+        'reactiveAnAccount'  => '/a/%s/accounts/%s/upgrade',
 
         // Calendars
-        'calendars'           => '/calendars',
-        'oneCalendar'         => '/calendars/%s',
-        'calendarFreeBusy'    => '/calendars/free-busy',
-        'calendarAbility'     => '/calendars/availability',
-        'calendarConsecutive' => '/calendars/availability/consecutive',
+        'calendars'     => '/v3/grants/%s/calendars',
+        'oneCalendar'   => '/v3/grants/%s/calendars/%s',
 
         // Events
-        'events'    => '/events',
-        'oneEvent'  => '/events/%s',
-        'icsEvent'  => '/events/to-ics',
-        'rsvpEvent' => '/send-rsvp',
+        'events'       => ' /v3/grants/%s/events',
+        'oneEvent'     => '/v3/grants/%s/events/%s',
+        'RSVPing'      => '/v3/grants/%s/events/%s/send-rsvp'
 
-        // Rooms
-        'resource' => '/resources',
-
-        // Contacts
-        'contacts'       => '/contacts',
-        'oneContact'     => '/contacts/%s',
-        'contactPic'     => '/contacts/%s/picture',
-        'contactsGroups' => '/contacts/groups',
-
-        // Neural
-        'neuralOcr'           => '/neural/ocr',
-        'neuralOcrFeedback'   => '/neural/ocr/feedback',
-        'neuralCate'          => '/neural/categorize',
-        'neuralCateFeedback'  => '/neural/categorize/feedback',
-        'neuralConv'          => '/neural/conversation',
-        'neuralConvFeedback'  => '/neural/conversation/feedback',
-        'neuralSign'          => '/neural/signature',
-        'neuralSignFeedback'  => '/neural/signature/feedback',
-        'neuralSment'         => '/neural/sentiment',
-        'neuralSmentFeedback' => '/neural/sentiment/feedback',
-
-        // Search
-        'searchThreads'  => '/threads/search',
-        'searchMessages' => '/messages/search',
-
-        // Webhooks
-        'webhooks'   => '/a/%s/webhooks',
-        'oneWebhook' => '/a/%s/webhooks/%s',
-
-        // JobStatuses
-        'jobStatuses'  => '/job-statuses',
-        'oneJobStatus' => '/job-statuses/%s',
-
-        // Deltas
-        'delta'             => '/delta',
-        'deltaLongpoll'     => '/delta/longpoll',
-        'deltaStreaming'    => '/delta/streaming',
-        'deltaLatestCursor' => '/delta/latest_cursor',
-
-        // Schedulers
-        // https://developer.nylas.com/docs/api/v2/scheduler/#overview
-        'scheduler'          => '/manage/pages',
-        'oneScheduler'       => '/manage/pages/%s',
-        'schedulerCalendars' => '/manage/pages/%s/calendars',
-        'schedulerUploadImg' => '/manage/pages/%s/upload-image',
     ];
 
     // ------------------------------------------------------------------------------
