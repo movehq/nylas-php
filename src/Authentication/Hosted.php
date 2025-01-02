@@ -87,7 +87,7 @@ class Hosted
      * @return array
      * @throws GuzzleException
      */
-    public function sendAuthorizationCode(string $code): array
+    public function sendAuthorizationCode(string $code, string $redirect_uri): array
     {
         V::doValidate(V::stringType()::notEmpty(), $code);
 
@@ -95,7 +95,8 @@ class Hosted
             'code'          => $code,
             'grant_type'    => 'authorization_code',
             'client_id'     => $this->options->getClientId(),
-            'client_secret' => $this->options->getClientSecret(),
+            'client_secret' => $this->options->getApiKey(),
+            'redirect_uri'  => $redirect_uri
         ];
 
         return $this->options

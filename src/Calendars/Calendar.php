@@ -57,23 +57,11 @@ class Calendar
      * @return array
      * @throws GuzzleException
      */
-    public function returnAllCalendars(array $params = []): array
-    {
-        V::doValidate(V::keySet(
-            V::keyOptional('view', V::in(['ids', 'count', 'expanded'])),
-            V::keyOptional('limit', V::intType()::min(1)),
-            V::keyOptional('offset', V::intType()::min(0)),
-
-            // @see https://developer.nylas.com/docs/api/metadata/#keep-in-mind
-            V::keyOptional('metadata_key', V::stringType()::length(1, 40)),
-            V::keyOptional('metadata_value', V::stringType()::length(1, 500)),
-            V::keyOptional('metadata_paire', V::stringType()::length(3, 27100)),
-            V::keyOptional('metadata_search', V::stringType()::notEmpty())
-        ), $params);
-
+    public function returnAllCalendars(array $path = []): array
+    {   
         return $this->options
             ->getSync()
-            ->setQuery($params)
+            ->setPath(...$path)
             ->setHeaderParams($this->options->getAuthorizationHeader())
             ->get(API::LIST['calendars']);
     }

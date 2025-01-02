@@ -67,4 +67,36 @@ class Account
     }
 
     // ------------------------------------------------------------------------------
+
+    /**
+     * get grant info
+     *
+     * @return array
+     */
+    public function getGrantInfo(array $path = []): array
+    {
+
+        return $this->options
+            ->getSync()
+            ->setPath(...$path)
+            ->setHeaderParams($this->options->getAuthorizationHeader())
+            ->get(API::LIST['getGrantInfo']);
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * get new grant
+     *
+     * @return array
+     */
+    public function getNewGrant(string $userAccessToken): array
+    {
+
+        return $this->options
+            ->getSync()
+            ->setPath(...$path)
+            ->setHeaderParams(['Authorization' => $userAccessToken])
+            ->get(API::LIST['getNewGrant']);
+    }
 }

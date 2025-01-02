@@ -99,6 +99,7 @@ class API
         'oAuthAuthorize'    => '/v3/connect/auth',
         'connectToken'      => '/v3/connect/token',
         'connectAuthorize'  => '/v3/connect/auth',
+        'connectTokenInfo'  => '/v3/connect/tokeninfo',
 
         // Accounts
         'account'            => '/account',
@@ -116,9 +117,15 @@ class API
         'oneCalendar'   => '/v3/grants/%s/calendars/%s',
 
         // Events
-        'events'       => ' /v3/grants/%s/events',
-        'oneEvent'     => '/v3/grants/%s/events/%s',
-        'RSVPing'      => '/v3/grants/%s/events/%s/send-rsvp'
+        'returnAllEvents'       => '/v3/grants/%s/events?calendar_id=%s&start=%s&end=%s&limit=%d&show_cancelled=%s',
+        'returnAllEventsPage'   => '/v3/grants/%s/events?calendar_id=%s&start=%s&end=%s&limit=%d&show_cancelled=%s&page_token=%s',
+        'createEvent'           => '/v3/grants/%s/events?calendar_id=%s',
+        'updateEvent'           => '/v3/grants/%s/events/%s?calendar_id=%s',
+        'deleteEvent'           => '/v3/grants/%s/events/%s',
+
+        // Grants
+        'getGrantInfo'     => '/v3/grants/%s',
+        'getNewGrant'      => '/v3/grants/me'
 
     ];
 

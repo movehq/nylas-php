@@ -185,9 +185,7 @@ trait AbsBase
     {
         if (!empty($headers['Authorization']))
         {
-            $encoded = base64_encode("{$headers['Authorization']}:");
-
-            $headers['Authorization'] = "Basic {$encoded}";
+            $headers['Authorization'] = "Bearer {$headers['Authorization']}";
         }
 
         $this->headerParams = ['headers' => $headers];
@@ -216,6 +214,7 @@ trait AbsBase
      */
     private function concatApiPath(string $api): string
     {
+        file_put_contents("logs/pp.log", "$api " . print_r($this->pathParams,true) . "\n", FILE_APPEND);
         return sprintf($api, ...$this->pathParams);
     }
 
