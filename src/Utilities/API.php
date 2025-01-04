@@ -125,7 +125,8 @@ class API
 
         // Grants
         'getGrantInfo'     => '/v3/grants/%s',
-        'getNewGrant'      => '/v3/grants/me'
+        'getNewGrant'      => '/v3/grants/me',
+        'deleteGrant'      => '/v3/grants/%s'
 
     ];
 

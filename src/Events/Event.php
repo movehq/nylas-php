@@ -96,7 +96,6 @@ class Event
      */
     public function createAnEvent(array $path, array $params): array
     {
-        file_put_contents("logs/arewecreating.log", "here woop");
 
         $data = $this->options
             ->getSync()
@@ -104,8 +103,6 @@ class Event
             ->setFormParams($params)
             ->setHeaderParams($this->options->getAuthorizationHeader())
             ->post(API::LIST['createEvent']);
-
-        file_put_contents("logs/isthisright.log", print_r($data,true));
 
         return $data;
     }

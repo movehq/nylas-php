@@ -214,7 +214,6 @@ trait AbsBase
      */
     private function concatApiPath(string $api): string
     {
-        file_put_contents("logs/pp.log", "$api " . print_r($this->pathParams,true) . "\n", FILE_APPEND);
         return sprintf($api, ...$this->pathParams);
     }
 

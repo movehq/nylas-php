@@ -38,37 +38,6 @@ class Account
     // ------------------------------------------------------------------------------
 
     /**
-     * cancel account
-     *
-     * @return array
-     */
-    public function cancelAccount(): array
-    {
-        return (new Hosted($this->options))->postOAuthRevoke();
-    }
-
-    // ------------------------------------------------------------------------------
-
-    /**
-     * get account info
-     *
-     * @return array
-     */
-    public function getAccount(): array
-    {
-        $accessToken = $this->options->getAccessToken();
-
-        $header = ['Authorization' => $accessToken];
-
-        return $this->options
-            ->getSync()
-            ->setHeaderParams($header)
-            ->get(API::LIST['account']);
-    }
-
-    // ------------------------------------------------------------------------------
-
-    /**
      * get grant info
      *
      * @return array
@@ -90,13 +59,30 @@ class Account
      *
      * @return array
      */
-    public function getNewGrant(string $userAccessToken): array
+    public function getNewGrant(array $path = []): array
     {
 
         return $this->options
             ->getSync()
             ->setPath(...$path)
-            ->setHeaderParams(['Authorization' => $userAccessToken])
+            ->setHeaderParams($this->options->getAuthorizationHeader())
             ->get(API::LIST['getNewGrant']);
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * delete grant
+     *
+     * @return array
+     */
+    public function deleteGrant(array $path = []): array
+    {
+
+        return $this->options
+            ->getSync()
+            ->setPath(...$path)
+            ->setHeaderParams($this->options->getAuthorizationHeader())
+            ->delete(API::LIST['deleteGrant']);
     }
 }
