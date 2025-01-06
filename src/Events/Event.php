@@ -53,18 +53,32 @@ class Event
      * @return array
      * @throws GuzzleException
      */
-    public function returnAllEvents(array $params = []): array
+    public function returnAllEvents(array $path = []): array
     {
-        V::doValidate(V::keySet(
-            V::keyOptional('view', V::in(['ids', 'count'])),
-            ...Validation::getFilterRules()
-        ), $params);
-
         return $this->options
             ->getSync()
-            ->setQuery($params)
+            ->setPath(...$path)
             ->setHeaderParams($this->options->getAuthorizationHeader())
-            ->get(API::LIST['events']);
+            ->get(API::LIST['returnAllEvents']);
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * get events list
+     *
+     * @param array $params
+     *
+     * @return array
+     * @throws GuzzleException
+     */
+    public function returnAllEventsPage(array $path = []): array
+    {
+        return $this->options
+            ->getSync()
+            ->setPath(...$path)
+            ->setHeaderParams($this->options->getAuthorizationHeader())
+            ->get(API::LIST['returnAllEventsPage']);
     }
 
     // ------------------------------------------------------------------------------
@@ -80,18 +94,17 @@ class Event
      * @return array
      * @throws GuzzleException
      */
-    public function createAnEvent(array $params, ?bool $notifyParticipants = null): array
+    public function createAnEvent(array $path, array $params): array
     {
-        V::doValidate(Validation::getEventRules(), $params);
 
-        $query = $notifyParticipants === null ? [] : [$this->notify => $notifyParticipants];
-
-        return $this->options
+        $data = $this->options
             ->getSync()
-            ->setQuery($query)
+            ->setPath(...$path)
             ->setFormParams($params)
             ->setHeaderParams($this->options->getAuthorizationHeader())
-            ->post(API::LIST['events']);
+            ->post(API::LIST['createEvent']);
+
+        return $data;
     }
 
     // ------------------------------------------------------------------------------
@@ -145,20 +158,14 @@ class Event
      * @return array
      * @throws GuzzleException
      */
-    public function updateAnEvent(string $eventId, array $params, ?bool $notifyParticipants = null): array
+    public function updateAnEvent(array $path, array $params): array
     {
-        V::doValidate(Validation::getEventRules(), $params);
-        V::doValidate(V::stringType()::notEmpty(), $eventId);
-
-        $query = $notifyParticipants === null ? [] : [$this->notify => $notifyParticipants];
-
         return $this->options
             ->getSync()
-            ->setPath($eventId)
-            ->setQuery($query)
+            ->setPath(...$path)
             ->setFormParams($params)
             ->setHeaderParams($this->options->getAuthorizationHeader())
-            ->put(API::LIST['oneEvent']);
+            ->put(API::LIST['updateEvent']);
     }
 
     // ------------------------------------------------------------------------------
@@ -173,32 +180,13 @@ class Event
      *
      * @return array
      */
-    public function deleteAnEvent(mixed $eventId, ?bool $notifyParticipants = null): array
+    public function deleteAnEvent(array $path = []): array
     {
-        $eventId = Helper::fooToArray($eventId);
-
-        V::doValidate(V::simpleArray(V::stringType()::notEmpty()), $eventId);
-
-        $queues = [];
-        $query  = $notifyParticipants === null ? [] : [$this->notify => $notifyParticipants];
-
-        foreach ($eventId as $id)
-        {
-            $request = $this->options
-                ->getAsync()
-                ->setPath($id)
-                ->setQuery($query)
-                ->setHeaderParams($this->options->getAuthorizationHeader());
-
-            $queues[] = static function () use ($request)
-            {
-                return $request->delete(API::LIST['oneEvent']);
-            };
-        }
-
-        $pools = $this->options->getAsync()->pool($queues, false);
-
-        return Helper::concatPoolInfos($eventId, $pools);
+        return $this->options
+            ->getAsync()
+            ->setPath(...$path)
+            ->setHeaderParams($this->options->getAuthorizationHeader())
+            ->delete(API::LIST['deleteEvent']);
     }
 
     // ------------------------------------------------------------------------------

@@ -185,9 +185,7 @@ trait AbsBase
     {
         if (!empty($headers['Authorization']))
         {
-            $encoded = base64_encode("{$headers['Authorization']}:");
-
-            $headers['Authorization'] = "Basic {$encoded}";
+            $headers['Authorization'] = "Bearer {$headers['Authorization']}";
         }
 
         $this->headerParams = ['headers' => $headers];

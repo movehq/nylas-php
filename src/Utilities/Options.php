@@ -9,6 +9,7 @@ use function is_resource;
 use Nylas\Request\Sync;
 use Nylas\Request\Async;
 use Nylas\Utilities\Validator as V;
+use Nylas\Exceptions\UnauthorizedException;
 
 /**
  * ----------------------------------------------------------------------------------
@@ -60,7 +61,7 @@ class Options
     /**
      * @var string
      */
-    private $accountId;
+    private $idToken;
 
     /**
      * @var array
@@ -77,11 +78,13 @@ class Options
     public function __construct(array $options)
     {
         $rules = V::keySet(
-            V::key('debug', V::boolType(), false),
-            V::key('region', V::in(['oregon', 'canada', 'ireland']), false),
-            V::key('log_file', $this->getLogFileRule(), false),
-            V::key('account_id', V::stringType()->notEmpty(), false),
-            V::key('access_token', V::stringType()->notEmpty(), false),
+            V::keyOptional('debug', V::boolType()),
+            V::keyOptional('region', V::in(['oregon', 'canada', 'ireland'])),
+            V::keyOptional('log_file', $this->getLogFileRule()),
+            V::keyOptional('handler', V::callableType()),
+            V::keyOptional('id_token', V::stringType()->notEmpty()),
+            V::keyOptional('access_token', V::stringType()->notEmpty()),
+            V::keyOptional('grant_id', V::stringType()->notEmpty()),
             V::key('client_id', V::stringType()->notEmpty()),
             V::key('api_key', V::stringType()->notEmpty())
         );
@@ -90,15 +93,40 @@ class Options
 
         // required
         $this->region = $options['region'] ?? 'oregon';
-        $this->setClientApps($options['api_key']);
+        $this->setClientApps($options['client_id'], $options['api_key']);
         $this->setClientId($options['client_id']);
         // optional
         $this->setDebug($options['debug'] ?? false);
         $this->setServer($options['region'] ?? 'oregon');
         $this->setLogFile($options['log_file'] ?? null);
-        $this->setAccountId($options['account_id'] ?? '');
+        $this->setHandler($options['handler'] ?? null);
+        $this->setIdToken($options['id_token'] ?? '');
         $this->setGrantId($options['grant_id'] ?? '');
         $this->setAccessToken($options['access_token'] ?? '');
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * set guzzle client handler
+     *
+     * @param null|callable $handler
+     */
+    public function setHandler(?callable $handler): void
+    {
+        $this->handler = $handler;
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * get access token
+     *
+     * @return null|callable
+     */
+    public function getHandler(): ?callable
+    {
+        return $this->handler ?? null;
     }
 
     // ------------------------------------------------------------------------------
@@ -158,9 +186,9 @@ class Options
      *
      * @param string $id
      */
-    public function setAccountId(string $id): void
+    public function setIdToken(string $id): void
     {
-        $this->accountId = $id;
+        $this->idToken = $id;
     }
 
     // ------------------------------------------------------------------------------
@@ -170,9 +198,9 @@ class Options
      *
      * @return string
      */
-    public function getAccountId(): ?string
+    public function getIdToken(): ?string
     {
-        return $this->accountId ?? null;
+        return $this->idToken ?? null;
     }
 
     // ------------------------------------------------------------------------------
@@ -238,6 +266,41 @@ class Options
     public function setClientId(string $clientId): void
     {
         $this->clientId = $clientId;
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * set clientId
+     *
+     * @param mixed $clientId
+     */
+    public function getClientId(): string
+    {
+        return $this->clientId;
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * set apiKey
+     *
+     * @param mixed $apiKey
+     */
+    public function setApiKey(string $apiKey): void
+    {
+        $this->apiKey = $apiKey;
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * set apiKey
+     *
+     */
+    public function getApiKey(): string
+    {
+        return $this->apiKey;
     }
 
     // ------------------------------------------------------------------------------
@@ -388,4 +451,20 @@ class Options
     }
 
     // ------------------------------------------------------------------------------
+
+    /**
+     * get authorization header
+     *
+     * @return array
+     */
+    public function getAuthorizationHeader(): array
+    {
+        $apiKey = $this->getApiKey();
+
+        if (empty($apiKey)) {
+            throw new UnauthorizedException();
+        }
+
+        return ['Authorization' => $apiKey];
+    }
 }
