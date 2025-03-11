@@ -183,7 +183,7 @@ class Event
     public function deleteAnEvent(array $path = []): array
     {
         return $this->options
-            ->getAsync()
+            ->getSync()
             ->setPath(...$path)
             ->setHeaderParams($this->options->getAuthorizationHeader())
             ->delete(API::LIST['deleteEvent']);
