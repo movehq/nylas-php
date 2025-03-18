@@ -121,7 +121,7 @@ class API
         'returnAllEventsPage'   => '/v3/grants/%s/events?calendar_id=%s&start=%s&end=%s&limit=%d&show_cancelled=%s&&expand_recurring=true&page_token=%s',
         'createEvent'           => '/v3/grants/%s/events?calendar_id=%s',
         'updateEvent'           => '/v3/grants/%s/events/%s?calendar_id=%s',
-        'deleteEvent'           => '/v3/grants/%s/events/%s',
+        'deleteEvent'           => '/v3/grants/%s/events/%s?calendar_id=%s',
 
         // Grants
         'getGrantInfo'     => '/v3/grants/%s',
